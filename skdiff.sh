@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-
-# npm install -g blink-diff
+# @file skdiff.sh
+# Show artboard changes between two versions of the same sketch file
+# @author Alister Lewis-Bowen <alister@lewis-bowen.org>
 
 [[ "$OSTYPE" == "darwin"* ]] || {
     echo "This will only run on macOS"
@@ -46,7 +47,7 @@ diffSketchArtboards () {
     while IFS= read -r _line; do
         _differ=$(echo "$_line" | sed -En 's#^Files (.*) and (.*) differ$#\1#p')
         _added=$(echo "$_line" | sed -En "s#^Only in ${dir_b}: (.*\.png)\$#\1#p")
-        _removed=$(echo "_$line" | sed -En "s#^Only in ${dir_a}: (.*\.png)\$#\1#p")
+        _removed=$(echo "$_line" | sed -En "s#^Only in ${dir_a}: (.*\.png)\$#\1#p")
         if [[ ! -z "$_differ" ]]; then
             _file="$(basename $_differ)"
             blink-diff --compose-ltr --output "$odir/changed/$_file" "$dir_a/$_file" "$dir_b/$_file"
@@ -60,7 +61,13 @@ diffSketchArtboards () {
     return 0
 }
 
-# exportSketchArtboards example_1.sketch
-# exportSketchArtboards example_2.sketch
+genGitHook () {
 
-diffSketchArtboards example_1_artboards example_2_artboards
+    local git_root=$(git rev-parse --show-toplevel)
+    [[ -e "$git_root" ]] || {
+        echo "You don't appear to be in a git repository"
+        exit 1
+    }
+
+    return 0
+}
