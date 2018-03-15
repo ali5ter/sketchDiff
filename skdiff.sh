@@ -28,10 +28,20 @@ type blink-diff &> /dev/null || {
 exportSketchArtboards () {
 
     local file="$1"
+    local _file
     local dir="${file%.sketch}_artboards"
     [ -d "$dir" ] && rm -fR "$dir"
 
-    "$sketch" export artboards ${file} --overwriting="YES" --include-symbols="NO" --output="${dir}" > /dev/null
+    "$sketch" export artboards "$file" --overwriting="YES" --include-symbols="NO" --output="$dir" > /dev/null
+
+    while IFS= read -r _filename; do
+        _file="${_filename#*/}" # strip containing dir
+        _file="${_file// /_}"   # underscore all spaces
+        _file="${_file//\//_}"  # underscore directory delimitor
+        mv "$_filename" "$dir/$_file"
+    done < <(find "$dir" -name "*.png")
+
+    find "$dir" -type d | grep -Ev "^$dir$" | xargs rm -fR
 
     return 0
 }
@@ -49,21 +59,25 @@ diffSketchArtboards () {
         _added=$(echo "$_line" | sed -En "s#^Only in ${dir_b}: (.*\.png)\$#\1#p")
         _removed=$(echo "$_line" | sed -En "s#^Only in ${dir_a}: (.*\.png)\$#\1#p")
         if [[ ! -z "$_differ" ]]; then
-            _file="$(basename $_differ)"
-            blink-diff --compose-ltr --output "$odir/changed/$_file" "$dir_a/$_file" "$dir_b/$_file"
+            _file=$(basename "$_differ")
+            blink-diff --compose-ltr --output "$odir/changed/$_file" "$dir_a/$_file" "$dir_b/$_file" >/dev/null
+            echo "<> $_file has changed"
         elif [[ ! -z "$_added" ]]; then
             cp "$dir_b/$_added" "$odir/added/$_added"
+            echo "++ $_file added"
         elif [[ ! -z "$_removed" ]]; then
             cp "$dir_a/$_removed" "$odir/deleted/$_removed"
+            echo "-- $_file removed"
         fi
-    done < <(diff -rq "$dir_a" "$dir_b")
+    done < <(diff -rq "$dir_a" "$dir_b" | grep .png)
 
     return 0
 }
 
 genGitHook () {
 
-    local git_root=$(git rev-parse --show-toplevel)
+    local git_root
+    git_root=$(git rev-parse --show-toplevel)
     [[ -e "$git_root" ]] || {
         echo "You don't appear to be in a git repository"
         exit 1

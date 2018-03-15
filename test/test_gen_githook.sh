@@ -7,5 +7,5 @@ SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
 source "$SCRIPTPATH/../skdiff.sh"
 cd "$SCRIPTPATH"
 
-#set -x
+[[ "$1" == '-d' ]] && set -x
 genGitHook
