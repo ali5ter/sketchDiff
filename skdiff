@@ -123,12 +123,28 @@ done
     return 0
 }
 
+fileExists() {
+    [[ ! -f "$1" ]] && {
+        echo "Unable to find file, $1" 1>&2
+        return 1
+    }
+    [[ "$1" != *.sketch ]] && {
+        echo "The file, $1, doesn't appear to be a sketch file" 1>&2
+        return 1
+    }
+    return 0
+}
+
 fileA="$1"
 fileB="$2"
 [[ "$3" == '-d' ]] && set -x
 resultsDir='changes'
 
-echo "Visual changes will be stored in directory, $resultsDir"
-exportSketchArtboards "$fileA"
-exportSketchArtboards "$fileB"
-diffSketchArtboards "${fileA%.sketch}_artboards" "${fileB%.sketch}_artboards" "$resultsDir"
+## TODO add help
+
+fileExists "$fileA" && fileExists "$fileB" && {
+    echo "Visual changes will be stored in directory, $resultsDir"
+    exportSketchArtboards "$fileA"
+    exportSketchArtboards "$fileB"
+    diffSketchArtboards "${fileA%.sketch}_artboards" "${fileB%.sketch}_artboards" "$resultsDir"
+}
