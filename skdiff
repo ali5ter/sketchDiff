@@ -51,6 +51,7 @@ diffSketchArtboards () {
     local dir_a="$1"
     local dir_b="$2"
     local odir="${3:-changes}"
+
     [ -d "$odir" ] && rm -fR "$odir"
     mkdir -p  "$odir/changed" "$odir/added" "$odir/deleted"
 
@@ -121,3 +122,13 @@ done
 "
     return 0
 }
+
+fileA="$1"
+fileB="$2"
+[[ "$3" == '-d' ]] && set -x
+resultsDir='changes'
+
+echo "Visual changes will be stored in directory, $resultsDir"
+exportSketchArtboards "$fileA"
+exportSketchArtboards "$fileB"
+diffSketchArtboards "${fileA%.sketch}_artboards" "${fileB%.sketch}_artboards" "$resultsDir"
