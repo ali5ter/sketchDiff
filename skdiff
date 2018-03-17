@@ -25,11 +25,34 @@ type blink-diff &> /dev/null || {
     npm install -g blink-diff
 }
 
+SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
+RESULTS_DIR='changes'
+WORKING_DIR=~/.skdiff
+FILE_A=''
+FILE_B=''
+
+[[ ! -L /usr/local/bin/skdiff ]] && ln -sf "$SCRIPTPATH/skdiff" /usr/local/bin
+
+[[ "$0" = "$BASH_SOURCE" ]] && SOURCED='no' || SOURCED='yes';
+
+_help() {
+    echo "Show visual differences between two Sketch files."
+    echo "Artbards added, deleted and visual changes are generated"
+    echo "Usage: skdiff FILE_A.sketch FILE_B.sketch [options]"
+    echo "Options:"
+    echo "  -h, --help, help ... displays this help information"
+    echo "  -o, --output ....... the directory for generated images"
+    echo "                       Defaults to directory name: $RESULTS_DIR"
+    return 0
+}
+
+err() { echo "$@" 1>&2; }
+
 exportSketchArtboards () {
 
     local file="$1"
     local _file
-    local dir="${file%.sketch}_artboards"
+    local dir="$WORKING_DIR/${file%.sketch}_artboards"
     [ -d "$dir" ] && rm -fR "$dir"
 
     "$sketch" export artboards "$file" --overwriting="YES" --include-symbols="NO" --output="$dir" > /dev/null
@@ -38,10 +61,10 @@ exportSketchArtboards () {
         _file="${_filename#*/}" # strip containing dir
         _file="${_file// /_}"   # underscore all spaces
         _file="${_file//\//_}"  # underscore directory delimitor
-        mv "$_filename" "$dir/$_file"
-    done < <(find "$dir" -name "*.png")
+        mv "$WORKING_DIR/$_filename" "$dir/$_file"
+    done < <(find "$dir" -name "*.png" | sed -En "s#${WORKING_DIR}/##p")
 
-    find "$dir" -type d | grep -Ev "^$dir$" | xargs rm -fR
+    find "$dir" -type d -empty -delete
 
     return 0
 }
@@ -50,7 +73,7 @@ diffSketchArtboards () {
 
     local dir_a="$1"
     local dir_b="$2"
-    local odir="${3:-changes}"
+    local odir="${3:-$RESULTS_DIR}"
 
     [ -d "$odir" ] && rm -fR "$odir"
     mkdir -p  "$odir/changed" "$odir/added" "$odir/deleted"
@@ -86,7 +109,6 @@ genGitHook () {
     _hookFile="$git_root/.git/hooks/post-commit"
 
     [[ -e "$_hookFile" ]] || {
-        SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
         echo "\
 #!/usr/bin/env
 # @file post-commit githook
@@ -125,26 +147,38 @@ done
 
 fileExists() {
     [[ ! -f "$1" ]] && {
-        echo "Unable to find file, $1" 1>&2
+        err "Unable to find file, $1"
         return 1
     }
     [[ "$1" != *.sketch ]] && {
-        echo "The file, $1, doesn't appear to be a sketch file" 1>&2
+        err "The file, $1, does not appear to be a sketch file"
         return 1
     }
     return 0
 }
 
-fileA="$1"
-fileB="$2"
-[[ "$3" == '-d' ]] && set -x
-resultsDir='changes'
+[[ "$SOURCED" == 'yes' ]] && return 0
 
-## TODO add help
+[[ $# == 0 ]] && { _help; exit 1; }
+while [[ $# -gt 0 ]]; do
+    arg="$1"
+    case $arg in
+        -o|--output)    RESULTS_DIR=$2; shift;;
+        -d)             set -x;;
+        -h|--help|help) _help; exit 1;;
+        *)  # positional args
+            if [ -z "$FILE_A" ]; then FILE_A=$1;
+            elif [ -z "$FILE_B" ]; then FILE_B=$1;fi
+            ;;
+    esac
+    shift
+done
 
-fileExists "$fileA" && fileExists "$fileB" && {
-    echo "Visual changes will be stored in directory, $resultsDir"
-    exportSketchArtboards "$fileA"
-    exportSketchArtboards "$fileB"
-    diffSketchArtboards "${fileA%.sketch}_artboards" "${fileB%.sketch}_artboards" "$resultsDir"
+fileExists "$FILE_A" && fileExists "$FILE_B" && {
+    echo "Visual changes will be stored in directory, $RESULTS_DIR"
+    exportSketchArtboards "$FILE_A"
+    exportSketchArtboards "$FILE_B"
+    diffSketchArtboards "$WORKING_DIR/${FILE_A%.sketch}_artboards" \
+        "$WORKING_DIR/${FILE_B%.sketch}_artboards" \
+        "$RESULTS_DIR"
 }

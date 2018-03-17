@@ -4,8 +4,10 @@
 # @author Alister Lewis-Bowen <alister@lewis-bowen.org>
 
 SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
-source "$SCRIPTPATH/../skdiff.sh"
 cd "$SCRIPTPATH"
 
 [[ "$1" == '-d' ]] && set -x
-diffSketchArtboards example_1_artboards example_2_artboards
+source ../skdiff
+
+diffSketchArtboards ~/.skdiff/example_1_artboards \
+    ~/.skdiff/example_2_artboards
