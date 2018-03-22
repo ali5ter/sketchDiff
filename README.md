@@ -20,6 +20,7 @@ all the artboards listed in this summary.
 **Artboards that have changed are
 represented by a composite image of the before, after and overlayed before and
 after artboards using red coloring to highlight the specific changes.**
+![](test/composite.png)
 
 ### What is the difference between these two Sketch files?
 `skdiff example_1.sketch example_2.sketch` will provide a summary of what
@@ -36,3 +37,6 @@ When `skdiff` is first run all prerequsites will be checked:
 
 The `blink-diff` utility will be installed using NPM which is used to generate 
 a composite of two images.
+
+`skdiff` will also be symbolically linked from `/usr/local/bin` so it appears
+in the shell path.
