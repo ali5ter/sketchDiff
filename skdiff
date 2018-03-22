@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # @file skdiff.sh
-# Show artboard changes between two versions of the same sketch file
+# Show artboard changes between two Sketch files
 # @author Alister Lewis-Bowen <alister@lewis-bowen.org>
 
 [[ "$OSTYPE" == "darwin"* ]] || {
@@ -36,9 +36,14 @@ FILE_B=''
 [[ "$0" = "$BASH_SOURCE" ]] && SOURCED='no' || SOURCED='yes';
 
 _help() {
-    echo "Show visual differences between two Sketch files."
+    echo "Show visual differences of Sketch files."
     echo "Artbards added, deleted and visual changes are generated"
-    echo "Usage: skdiff FILE_A.sketch FILE_B.sketch [options]"
+    echo "Usage: "
+    echo "  skdiff FILE_A.sketch FILE_B.sketch [options]"
+    echo "  skdiff FILE_A.sketch [options]"
+    echo "When involed with one Sketch file, it is assumed it exists"
+    echo "within a git repository and will be diff'ed against a previous"
+    echi "version."
     echo "Options:"
     echo "  -h, --help, help ... displays this help information"
     echo "  -o, --output ....... the directory for generated images"
@@ -88,10 +93,10 @@ diffSketchArtboards () {
             echo "<> $_file has changed"
         elif [[ ! -z "$_added" ]]; then
             cp "$dir_b/$_added" "$odir/added/$_added"
-            echo "++ $_file added"
+            echo "++ $_added added"
         elif [[ ! -z "$_removed" ]]; then
             cp "$dir_a/$_removed" "$odir/deleted/$_removed"
-            echo "-- $_file removed"
+            echo "-- $_removed removed"
         fi
     done < <(diff -rq "$dir_a" "$dir_b" | grep .png)
 
@@ -174,6 +179,16 @@ while [[ $# -gt 0 ]]; do
     shift
 done
 
+fileExists "$FILE_A" && ! fileExists "$FILE_B" 2>/dev/null && {
+    repoDir=$(git rev-parse --show-toplevel)
+    sha="$(git log -1 --follow "$FILE_A" | grep -e '^commit' | awk '{print $2}')"
+    lastfileVersion=".$FILE_A"
+    fileRelative=$(find "$repoDir" -name "$FILE_A" | sed -e "s#${repoDir}/##g")
+    git show "$sha":"$fileRelative" > "$lastfileVersion"
+    FILE_B="$FILE_A"
+    FILE_A="$lastfileVersion"
+}
+
 fileExists "$FILE_A" && fileExists "$FILE_B" && {
     echo "Visual changes will be stored in directory, $RESULTS_DIR"
     exportSketchArtboards "$FILE_A"
@@ -182,3 +197,6 @@ fileExists "$FILE_A" && fileExists "$FILE_B" && {
         "$WORKING_DIR/${FILE_B%.sketch}_artboards" \
         "$RESULTS_DIR"
 }
+
+## clean up 
+rm -f .*.sketch
