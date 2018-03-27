@@ -16,13 +16,14 @@ sketch=/Applications/Sketch.app/Contents/Resources/sketchtool/bin/sketchtool
 
 type blink-diff &> /dev/null || {
     type npm &> /dev/null || {
-        echo "To run image different detection you need to install blink-diff"
-        echo "using the node package manage (npm). Please install npm."
+        echo "To run image difference detection you need to install blink-diff"
+        echo "using the node package manager (npm). Please install npm."
         echo "Instructions at https://www.npmjs.com/get-npm"
         exit 1
     }
     echo "Installing blink-diff..."
     npm install -g blink-diff
+    echo
 }
 
 QUIET=no
@@ -39,16 +40,16 @@ DIFF_VERSION='no'
 [[ "$0" = "$BASH_SOURCE" ]] && SOURCED='no' || SOURCED='yes';
 
 _help() {
-    echo "Show visual differences of Sketch files."
+    echo "Show visual differences between Sketch files."
     echo "Artbards added, deleted and visual changes are generated"
     echo "Usage: "
     echo "  skdiff FILE_A.sketch FILE_B.sketch [options]"
     echo "  skdiff FILE_A.sketch [options]"
-    echo "When involed with one Sketch file, it is assumed it exists"
+    echo "When involed with one Sketch file, it is assumed the file exists"
     echo "within a git repository and will be diff'ed against a previous"
     echi "version."
     echo "Options:"
-    echo "  -h, --help, help ... displays this help information"
+    echo "  -h, --help, help ... display this help information"
     echo "  -q, --quiet ........ supress progress messages"
     echo "  -o, --output ....... the directory for generated images"
     echo "                       Defaults to directory name: $RESULTS_DIR"
@@ -71,9 +72,12 @@ fileExists() {
 }
 
 exportSketchArtboards () {
-    # export the artboards from a Sketch file
-    # reduce all artboard PNG filepaths to a file
-    # cache resulting artboards in a working dir
+    # - export the artboards from a Sketch file
+    # - reduce all artboard PNG filepaths to a file
+    # - cache resulting artboards in a working dir
+    # @param location of the Sketch file
+    # @param (optionai) [yes|no] clearing any cached artboard export
+    #        default to yes
 
     local filepath="$1"
     local filename=$(basename "$1")
@@ -103,15 +107,13 @@ exportSketchArtboards () {
     return 0
 }
 
-genArtboardFilenameList() {
-    local dir="$1"
-    find "$dir" -print0 | xargs -0 basename
-}
-
 diffSketchArtboards () {
-    # diff two directories of exported Sketch artboards
-    # echo summary
-    # generate directory of added, removed and changes artboard images
+    # - diff two directories of exported Sketch artboards
+    # - echo summary
+    # - generate directory of added, removed and changes artboard images
+    # @param name of first Sketch file
+    # @param name of second Sketch file
+    # @param (optional) output directory path
 
     local pathnameA="$1"
     local dirnameA=$(basename "$pathnameA")
@@ -230,13 +232,16 @@ fileExists "$FILE_A" && ! fileExists "$FILE_B" 2>/dev/null && {
 }
 
 fileExists "$FILE_A" && fileExists "$FILE_B" && {
+
     msg "Exporting artboards ..."
     exportSketchArtboards "$FILE_A" $([[ "$DIFF_VERSION" == 'yes' ]] && echo 'no')
     exportSketchArtboards "$FILE_B"
+
     msg " done\nLooking for differences...\n"
     diffSketchArtboards "$WORKING_DIR/${FILE_A%.sketch}_artboards" \
         "$WORKING_DIR/${FILE_B%.sketch}_artboards" \
         "$RESULTS_DIR"
+        
     rm -f .*.sketch > /dev/null
     if [[ "$NUM_DIFFS" -gt 0 ]]; then
         msg "$NUM_DIFFS differences found and stored in directory, '$RESULTS_DIR'\n"
