@@ -19,3 +19,6 @@ skdiff example_1.sketch example_1_artboards
 
 skdiff example_1.sketch example_2.sketch \
     --output test_changes
+
+skdiff example_1.sketch example_2.sketch \
+    --output test_changes -q
