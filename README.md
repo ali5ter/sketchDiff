@@ -28,6 +28,11 @@ artboards have been added, deleted or changes between the two files, e.g.
 
 The `changes` directory will be generate the same way as described above.
 
+### Using the functionality of skdiff as part of another script
+`skdiff` is written so the internal functions can be called from your own 
+bash script. Just source the `skdiff` script and you'll have access to its
+variables and functions.
+
 ## Installation
 When `skdiff` is first run all prerequsites will be checked:
 

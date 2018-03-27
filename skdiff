@@ -60,6 +60,9 @@ err()   { echo -e "\e[0;31m${@}\e[0m" 1>&2; }
 msg()   { [[ "$QUIET" == 'no' ]] && echo -en "\e[0;37m${@}\e[0m"; }
 
 fileExists() {
+    # - Check if file exists and has sketch extension
+    # @param location of the Sketch file
+    
     [[ ! -f "$1" ]] && {
         err "Unable to find file, $1"
         return 1
@@ -241,7 +244,7 @@ fileExists "$FILE_A" && fileExists "$FILE_B" && {
     diffSketchArtboards "$WORKING_DIR/${FILE_A%.sketch}_artboards" \
         "$WORKING_DIR/${FILE_B%.sketch}_artboards" \
         "$RESULTS_DIR"
-        
+
     rm -f .*.sketch > /dev/null
     if [[ "$NUM_DIFFS" -gt 0 ]]; then
         msg "$NUM_DIFFS differences found and stored in directory, '$RESULTS_DIR'\n"
