@@ -27,6 +27,7 @@ type blink-diff &> /dev/null || {
 }
 
 QUIET=no
+OUTPUT=yes
 SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
 RESULTS_DIR='changes'
 WORKING_DIR=~/.skdiff
@@ -51,6 +52,7 @@ _help() {
     echo "Options:"
     echo "  -h, --help, help ... display this help information"
     echo "  -q, --quiet ........ supress progress messages"
+    echo "  -O, --no-output .... supress generating images"
     echo "  -o, --output ....... the directory for generated images"
     echo "                       Defaults to directory name: $RESULTS_DIR"
     return 0
@@ -125,7 +127,7 @@ diffSketchArtboards () {
     local odir="${3:-$RESULTS_DIR}"
 
     [ -d "$odir" ] && rm -fR "$odir"
-    mkdir -p  "$odir/changed" "$odir/added" "$odir/deleted"
+    [ "$OUTPUT" == 'yes' ] && mkdir -p  "$odir/changed" "$odir/added" "$odir/deleted"
 
     while IFS= read -r _line; do
         _differ=$(echo "$_line" | sed -En 's#^Files (.*) and (.*) differ$#\1#p')
@@ -133,17 +135,17 @@ diffSketchArtboards () {
         _removed=$(echo "$_line" | sed -En "s#^Only in .*${dirnameA}: (.*\.png)\$#\1#p")
         if [[ ! -z "$_differ" ]]; then
             _file=$(basename "$_differ")
-            blink-diff --compose-ltr --output "$odir/changed/$_file" \
+            [ "$OUTPUT" == 'yes' ] && blink-diff --compose-ltr --output "$odir/changed/$_file" \
                 "$WORKING_DIR/$dirnameA/$_file" \
                 "$WORKING_DIR/$dirnameB/$_file" >/dev/null
             msg "\e[0;33m<> $_file has changed\n"
             (( NUM_DIFFS++ ))
         elif [[ ! -z "$_added" ]]; then
-            cp "$WORKING_DIR/$dirnameB/$_added" "$odir/added/$_added"
+            [ "$OUTPUT" == 'yes' ] && cp "$WORKING_DIR/$dirnameB/$_added" "$odir/added/$_added"
             msg "\e[0;32m++ $_added added\n"
             (( NUM_DIFFS++ ))
         elif [[ ! -z "$_removed" ]]; then
-            cp "$WORKING_DIR/$dirnameA/$_removed" "$odir/deleted/$_removed"
+            [ "$OUTPUT" == 'yes' ] && cp "$WORKING_DIR/$dirnameA/$_removed" "$odir/deleted/$_removed"
             msg "\e[0;31m-- $_removed removed\n"
             (( NUM_DIFFS++ ))
         fi
@@ -209,7 +211,8 @@ while [[ $# -gt 0 ]]; do
     arg="$1"
     case $arg in
         -o|--output)    RESULTS_DIR=$2; shift;;
-        -q|--quiet)     QUIET=yes; shift;;
+        -O|--no-output) OUTPUT=no;;
+        -q|--quiet)     QUIET=yes;;
         -d)             set -x;;
         -h|--help|help) _help; exit 1;;
         *)  # positional args
