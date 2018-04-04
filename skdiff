@@ -76,6 +76,59 @@ fileExists() {
     return 0
 }
 
+diffAgainstPreviousVersion () {
+    # - find previous git commit with a change to the given sketch file
+    # - set FILE_A to this previous version
+    # - set FILE_B to the current version
+
+    ## TODO: Check file in git repo
+    repoDir=$(git rev-parse --show-toplevel)
+
+    ## TODO: Guard against not finding any previous version
+    sha="$(git log -1 --follow "$FILE_A" | grep -e '^commit' | awk '{print $2}')"
+
+    currentVersion=$(basename "$FILE_A")
+    lastVersion=".${currentVersion%.sketch}-${sha}.sketch"
+
+    fileRelative=$(find "$repoDir" -name "$currentVersion" | sed -e "s#${repoDir}/##g")
+    git show "$sha":"$fileRelative" > "$lastVersion"
+
+    FILE_B="$FILE_A"
+    FILE_A="$lastVersion"
+    DIFF_VERSION='yes'
+
+    return 0
+}
+
+diffTwoFiles () {
+    # - export artboards for both FILE_A & B
+    # - diff the artboards and show summary
+
+    msg "Exporting artboards ..."
+    exportSketchArtboards "$FILE_A" $([[ "$DIFF_VERSION" == 'yes' ]] && echo 'no')
+    exportSketchArtboards "$FILE_B"
+
+    msg " done\nLooking for differences...\n"
+    diffSketchArtboards "$WORKING_DIR/${FILE_A%.sketch}_artboards" \
+        "$WORKING_DIR/${FILE_B%.sketch}_artboards" \
+        "$RESULTS_DIR"
+
+    rm -f .*.sketch > /dev/null
+    if [[ "$NUM_DIFFS" -gt 0 ]]; then
+        if [[ "$OUTPUT" == 'yes' ]]; then
+            msg "$NUM_DIFFS differences found and stored in directory, '$RESULTS_DIR'\n"
+        else
+            msg "$NUM_DIFFS differences found\n"
+        fi
+    else
+        rm -fR "$RESULTS_DIR"
+        msg "No differences found\n"
+        exit 1
+    fi
+
+    return 0
+}
+
 exportSketchArtboards () {
     # - export the artboards from a Sketch file
     # - reduce all artboard PNG filepaths to a file
@@ -223,39 +276,11 @@ while [[ $# -gt 0 ]]; do
     shift
 done
 
-fileExists "$FILE_A" && ! fileExists "$FILE_B" 2>/dev/null && {
-    ## TODO: Check file in git repo
-    repoDir=$(git rev-parse --show-toplevel)
-    ## TODO: Guard against not finding any previous version
-    sha="$(git log -1 --follow "$FILE_A" | grep -e '^commit' | awk '{print $2}')"
-    currentVersion=$(basename "$FILE_A")
-    lastVersion=".${currentVersion%.sketch}-${sha}.sketch"
-    fileRelative=$(find "$repoDir" -name "$currentVersion" | sed -e "s#${repoDir}/##g")
-    git show "$sha":"$fileRelative" > "$lastVersion"
-    FILE_B="$FILE_A"
-    FILE_A="$lastVersion"
-    DIFF_VERSION='yes'
-}
+[[ ! -z "$FILE_A" ]] && fileExists "$FILE_A"
+[[ ! -z "$FILE_B" ]] && fileExists "$FILE_B"
+[[ $? -eq 1 ]] && exit 1
 
-fileExists "$FILE_A" && fileExists "$FILE_B" && {
-
-    msg "Exporting artboards ..."
-    exportSketchArtboards "$FILE_A" $([[ "$DIFF_VERSION" == 'yes' ]] && echo 'no')
-    exportSketchArtboards "$FILE_B"
-
-    msg " done\nLooking for differences...\n"
-    diffSketchArtboards "$WORKING_DIR/${FILE_A%.sketch}_artboards" \
-        "$WORKING_DIR/${FILE_B%.sketch}_artboards" \
-        "$RESULTS_DIR"
-
-    rm -f .*.sketch > /dev/null
-    if [[ "$NUM_DIFFS" -gt 0 ]]; then
-        msg "$NUM_DIFFS differences found and stored in directory, '$RESULTS_DIR'\n"
-    else
-        rm -fR "$RESULTS_DIR"
-        msg "No differences found\n"
-        exit 1
-    fi
-}
+[[ -z "$FILE_B" ]] && diffAgainstPreviousVersion
+diffTwoFiles
 
 exit 0
