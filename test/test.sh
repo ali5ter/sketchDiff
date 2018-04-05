@@ -20,6 +20,16 @@ heading() {
     return 0
 }
 
+continueDialog() {
+    local msg="$1"
+	osascript >/dev/null <<END_OF_APPLESCRIPT
+set theDialogText to "$msg"
+display dialog theDialogText \
+    with title "skdiff test" \
+    buttons {"Continue"} default button "Continue"
+END_OF_APPLESCRIPT
+}
+
 cleanup() {
     rm -fR "$OUTPUT_DIR" 'changes'
 }
@@ -43,13 +53,14 @@ heading "diff summary and output to '$OUTPUT_DIR'"
 cleanup
 skdiff example_1.sketch example_2.sketch \
     --output "$OUTPUT_DIR"
+continueDialog "The '$OUTPUT_DIR' folder will be removed. \nContinue when you are ready to run the remianing tests."
 
-heading "diff summary and output to '$OUTPUT_DIR' with no messages"
+heading "diff summary and output to '$OUTPUT_DIR' with no messages or finder"
 cleanup
 skdiff example_1.sketch example_2.sketch \
-    --output "$OUTPUT_DIR" -q
+    --output "$OUTPUT_DIR" -q --no-finder
 
-heading "diff summary only"
+heading "diff summary only with no finder"
 cleanup
 skdiff example_1.sketch example_2.sketch \
-    --no-output
+    --no-output --no-finder

@@ -26,10 +26,11 @@ type blink-diff &> /dev/null || {
     echo
 }
 
-QUIET=no
-OUTPUT=yes
+QUIET='no'
+OUTPUT='yes'
 SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
 RESULTS_DIR='changes'
+OPEN_RESULTS='yes'
 WORKING_DIR=~/.skdiff
 FILE_A=''
 FILE_B=''
@@ -53,6 +54,7 @@ _help() {
     echo "  -h, --help, help ... display this help information"
     echo "  -q, --quiet ........ supress progress messages"
     echo "  -O, --no-output .... supress generating images"
+    echo "  -F, --no-finder .... supress opening Finder to show generated images"
     echo "  -o, --output ....... the directory for generated images"
     echo "                       Defaults to directory name: $RESULTS_DIR"
     return 0
@@ -77,7 +79,7 @@ fileExists() {
 }
 
 diffAgainstPreviousVersion () {
-    # - find previous git commit with a change to the given sketch file
+    # - find previous git commit of FILE_A
     # - set FILE_A to this previous version
     # - set FILE_B to the current version
 
@@ -117,6 +119,7 @@ diffTwoFiles () {
     if [[ "$NUM_DIFFS" -gt 0 ]]; then
         if [[ "$OUTPUT" == 'yes' ]]; then
             msg "$NUM_DIFFS differences found and stored in directory, '$RESULTS_DIR'\n"
+            [[ "$OPEN_RESULTS" == 'yes' ]] && open "$RESULTS_DIR"
         else
             msg "$NUM_DIFFS differences found\n"
         fi
@@ -264,8 +267,9 @@ while [[ $# -gt 0 ]]; do
     arg="$1"
     case $arg in
         -o|--output)    RESULTS_DIR=$2; shift;;
-        -O|--no-output) OUTPUT=no;;
-        -q|--quiet)     QUIET=yes;;
+        -O|--no-output) OUTPUT='no';;
+        -F|--no-finder) OPEN_RESULTS='no';;
+        -q|--quiet)     QUIET='yes';;
         -d)             set -x;;
         -h|--help|help) _help; exit 1;;
         *)  # positional args
