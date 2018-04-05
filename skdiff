@@ -280,9 +280,8 @@ while [[ $# -gt 0 ]]; do
     shift
 done
 
-[[ ! -z "$FILE_A" ]] && fileExists "$FILE_A"
-[[ ! -z "$FILE_B" ]] && fileExists "$FILE_B"
-[[ $? -eq 1 ]] && exit 1
+[[ -z "$FILE_A" ]] || { fileExists "$FILE_A" || exit 1; }
+[[ -z "$FILE_B" ]] || { fileExists "$FILE_B" || exit 1; }
 
 [[ -z "$FILE_B" ]] && diffAgainstPreviousVersion
 diffTwoFiles
