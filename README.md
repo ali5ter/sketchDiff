@@ -1,5 +1,7 @@
 # skdiff
-Command to generate visual differences between two sketch files
+Command to generate visual differences between two sketch files. Useful as a `git diff` for your Sketch files.
+
+This is a bash script that will run in your macOS using Terminal app.
 
 ## Usage
 `skdiff -h` for help information
@@ -22,18 +24,16 @@ represented by a composite image of the before, after and overlayed before and
 after artboards using red coloring to highlight the specific changes.**
 ![](test/composite.png)
 
-### What is the difference between these two Sketch files?
-`skdiff example_1.sketch example_2.sketch` will provide a summary of what
-artboards have been added, deleted or changes between the two files, e.g.
-
-The `changes` directory will be generate the same way as described above.
-
 ### Using the functionality of skdiff as part of another script
 `skdiff` is written so the internal functions can be called from your own 
 bash script. Just source the `skdiff` script and you'll have access to its
 variables and functions.
 
 ## Installation
+Run the following command to download and install
+
+    curl https://raw.githubusercontent.com/ali5ter/sketchDiff/master/skdiff -o skdiff && chmod 755 skdiff && mv skdiff /usr/local/bin/
+
 When `skdiff` is first run all prerequsites will be checked:
 
 1. You're running `skdiff` on macOS
@@ -42,6 +42,3 @@ When `skdiff` is first run all prerequsites will be checked:
 
 The `blink-diff` utility will be installed using NPM which is used to generate 
 a composite of two images.
-
-`skdiff` will also be symbolically linked from `/usr/local/bin` so it appears
-in the shell path.
