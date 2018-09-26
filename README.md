@@ -3,6 +3,8 @@ Command to generate visual differences between two sketch files. Useful as a `gi
 
 This is a bash script that will run in your macOS using Terminal app.
 
+![screencast demo of skdiff](https://raw.githubusercontent.com/ali5ter/sketchDiff/master/skdiff_demo.gif)
+
 ## Usage
 `skdiff -h` for help information
 
