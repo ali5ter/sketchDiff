@@ -14,6 +14,7 @@
 }
 sketch=/Applications/Sketch.app/Contents/Resources/sketchtool/bin/sketchtool
 
+export PATH="$PATH:/usr/local/bin"
 type blink-diff &> /dev/null || {
     type npm &> /dev/null || {
         echo "To run image difference detection you need to install blink-diff"
@@ -28,6 +29,7 @@ type blink-diff &> /dev/null || {
 
 QUIET='no'
 OUTPUT='yes'
+# shellcheck disable=SC2164
 SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
 RESULTS_DIR='changes'
 OPEN_RESULTS='yes'
@@ -37,8 +39,7 @@ FILE_B=''
 NUM_DIFFS=0
 DIFF_VERSION='no'
 
-[[ ! -L /usr/local/bin/skdiff ]] && ln -sf "$SCRIPTPATH/skdiff" /usr/local/bin
-
+# shellcheck disable=SC2128
 [[ "$0" = "$BASH_SOURCE" ]] && SOURCED='no' || SOURCED='yes';
 
 _help() {
@@ -60,7 +61,9 @@ _help() {
     return 0
 }
 
+# shellcheck disable=SC2145
 err()   { echo -e "\e[0;31m${@}\e[0m" 1>&2; }
+# shellcheck disable=SC2145
 msg()   { [[ "$QUIET" == 'no' ]] && echo -en "\e[0;37m${@}\e[0m"; }
 
 fileExists() {
@@ -107,6 +110,7 @@ diffTwoFiles () {
     # - diff the artboards and show summary
 
     msg "Exporting artboards ..."
+    # shellcheck disable=SC2046
     exportSketchArtboards "$FILE_A" $([[ "$DIFF_VERSION" == 'yes' ]] && echo 'no')
     exportSketchArtboards "$FILE_B"
 
@@ -141,6 +145,7 @@ exportSketchArtboards () {
     #        default to yes
 
     local filepath="$1"
+    # shellcheck disable=SC2155
     local filename=$(basename "$1")
     local clearCache="${2:-yes}"
 
@@ -177,8 +182,10 @@ diffSketchArtboards () {
     # @param (optional) output directory path
 
     local pathnameA="$1"
+    # shellcheck disable=SC2155
     local dirnameA=$(basename "$pathnameA")
     local pathnameB="$2"
+    # shellcheck disable=SC2155
     local dirnameB=$(basename "$pathnameB")
     local odir="${3:-$RESULTS_DIR}"
 
@@ -189,18 +196,18 @@ diffSketchArtboards () {
         _differ=$(echo "$_line" | sed -En 's#^Files (.*) and (.*) differ$#\1#p')
         _added=$(echo "$_line" | sed -En "s#^Only in .*${dirnameB}: (.*\.png)\$#\1#p")
         _removed=$(echo "$_line" | sed -En "s#^Only in .*${dirnameA}: (.*\.png)\$#\1#p")
-        if [[ ! -z "$_differ" ]]; then
+        if [[ -n "$_differ" ]]; then
             _file=$(basename "$_differ")
             [ "$OUTPUT" == 'yes' ] && blink-diff --compose-ltr --output "$odir/changed/$_file" \
                 "$WORKING_DIR/$dirnameA/$_file" \
                 "$WORKING_DIR/$dirnameB/$_file" >/dev/null
             msg "\e[0;33m<> $_file has changed\n"
             (( NUM_DIFFS++ ))
-        elif [[ ! -z "$_added" ]]; then
+        elif [[ -n "$_added" ]]; then
             [ "$OUTPUT" == 'yes' ] && cp "$WORKING_DIR/$dirnameB/$_added" "$odir/added/$_added"
             msg "\e[0;32m++ $_added added\n"
             (( NUM_DIFFS++ ))
-        elif [[ ! -z "$_removed" ]]; then
+        elif [[ -n "$_removed" ]]; then
             [ "$OUTPUT" == 'yes' ] && cp "$WORKING_DIR/$dirnameA/$_removed" "$odir/deleted/$_removed"
             msg "\e[0;31m-- $_removed removed\n"
             (( NUM_DIFFS++ ))

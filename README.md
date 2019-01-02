@@ -36,11 +36,13 @@ Run the following command to download and install
 
     curl https://raw.githubusercontent.com/ali5ter/sketchDiff/master/skdiff -o skdiff && chmod 755 skdiff && mv skdiff /usr/local/bin/
 
-When `skdiff` is first run all prerequsites will be checked:
+`skdiff` will check the following prerequisites:
 
 1. You're running `skdiff` on macOS
 2. You have Sketch installed
 3. You have NPM installed
+4. You have `blink-diff` installed. If you're familiar with npm, you could install this manually using 
 
-The `blink-diff` utility will be installed using NPM which is used to generate 
-a composite of two images.
+        npm install -g blink-diff
+
+The `blink-diff` utility is used to generate the composite of two images. `skdiff` will attempt to install this utility if npm is present but the utility is not.
