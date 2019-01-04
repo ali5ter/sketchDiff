@@ -50,7 +50,7 @@ _help() {
     echo "  skdiff FILE_A.sketch [options]"
     echo "When involed with one Sketch file, it is assumed the file exists"
     echo "within a git repository and will be diff'ed against a previous"
-    echi "version."
+    echo "version."
     echo "Options:"
     echo "  -h, --help, help ... display this help information"
     echo "  -q, --quiet ........ supress progress messages"
