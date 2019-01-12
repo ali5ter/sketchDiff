@@ -1,0 +1,26 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "bashdb",
+            "request": "launch",
+            "name": "Test help",
+            "cwd": "${workspaceFolder}",
+            "program": "${workspaceFolder}/skdiff",
+            "args": ["-h"]
+        },
+        {
+            "type": "bashdb",
+            "request": "launch",
+            "name": "Test for issue #11",
+            "cwd": "${workspaceFolder}",
+            "program": "${workspaceFolder}/skdiff",
+            "args": [
+                "${workspaceFolder}/Configure Image and Components for Cluster.sketch"
+            ]
+        }
+    ]
+}

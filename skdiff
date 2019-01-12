@@ -193,7 +193,7 @@ diffSketchArtboards () {
     [ "$OUTPUT" == 'yes' ] && mkdir -p  "$odir/changed" "$odir/added" "$odir/deleted"
 
     while IFS= read -r _line; do
-        _differ=$(echo "$_line" | sed -En 's#^Files (.*) and (.*) differ$#\1#p')
+        _differ=$(echo "$_line" | sed -En 's#^Files (.*) and /(.*) differ$#\1#p')
         _added=$(echo "$_line" | sed -En "s#^Only in .*${dirnameB}: (.*\.png)\$#\1#p")
         _removed=$(echo "$_line" | sed -En "s#^Only in .*${dirnameA}: (.*\.png)\$#\1#p")
         if [[ -n "$_differ" ]]; then
@@ -242,7 +242,7 @@ genGitHook () {
 
 "
     }
-
+    # shellcheck disable=SC2028
     echo "\
 set -e 
 
