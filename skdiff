@@ -29,6 +29,7 @@ type blink-diff &> /dev/null || {
 
 QUIET='no'
 OUTPUT='yes'
+SYMBOLS='NO'
 # shellcheck disable=SC2164
 SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
 RESULTS_DIR='/tmp/changes'
@@ -56,6 +57,7 @@ _help() {
     echo "  -q, --quiet ........ supress progress messages"
     echo "  -O, --no-output .... supress generating images"
     echo "  -F, --no-finder .... supress opening Finder to show generated images"
+    echo "  -I, --symbols ...... include symbols when checking for differences"
     echo "  -o, --output ....... the directory for generated images"
     echo "                       Defaults to directory name: $RESULTS_DIR"
     return 0
@@ -161,10 +163,9 @@ exportSketchArtboards () {
     if [[ -d "$dir" && "$clearCache" != 'yes' ]]; then return 0; fi
     [[ -d "$dir" ]] && rm -fR "$dir"
 
-    ## TODO: Add option to export symbols too
     "$sketch" export artboards "$filepath" \
         --overwriting="YES" \
-        --include-symbols="NO" \
+        --include-symbols="$SYMBOLS" \
         --output="$dir" > /dev/null
 
     while IFS= read -r _filename; do
@@ -282,6 +283,7 @@ while [[ $# -gt 0 ]]; do
         -o|--output)    RESULTS_DIR=$2; shift;;
         -O|--no-output) OUTPUT='no';;
         -F|--no-finder) OPEN_RESULTS='no';;
+        -I|--symbols)   SYMBOLS='YES';;
         -q|--quiet)     QUIET='yes';;
         -d)             set -x;;
         -h|--help|help) _help; exit 1;;

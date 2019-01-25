@@ -71,3 +71,8 @@ cp example_1.sketch test.sketch
 skdiff example_1.sketch
 skdiff test.sketch
 rm test.sketch
+
+heading "diff including symbols"
+cleanup
+skdiff example_1.sketch example_2.sketch \
+    --symbols
