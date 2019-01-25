@@ -64,3 +64,10 @@ heading "diff summary only with no finder"
 cleanup
 skdiff example_1.sketch example_2.sketch \
     --no-output --no-finder
+
+heading "diff against previous version when file not tracked"
+cleanup
+cp example_1.sketch test.sketch
+skdiff example_1.sketch
+skdiff test.sketch
+rm test.sketch

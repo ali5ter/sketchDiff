@@ -86,10 +86,16 @@ diffAgainstPreviousVersion () {
     # - set FILE_A to this previous version
     # - set FILE_B to the current version
 
-    ## TODO: Check file in git repo
+    type git &> /dev/null || {
+        err "This command assumes you have git installed. However, I can't find git."
+        exit 1
+    }
+    [[ $(git ls-files "$FILE_A") == "$FILE_A" ]] || {
+        err "$FILE_A is not tracked by git."
+        exit 1
+    }
     repoDir=$(git rev-parse --show-toplevel)
 
-    ## TODO: Guard against not finding any previous version
     sha="$(git log -1 --follow "$FILE_A" | grep -e '^commit' | awk '{print $2}')"
 
     currentVersion=$(basename "$FILE_A")
