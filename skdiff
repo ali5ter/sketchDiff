@@ -29,6 +29,7 @@ type blink-diff &> /dev/null || {
 
 QUIET='no'
 OUTPUT='yes'
+RAW='no'
 SYMBOLS='NO'
 # shellcheck disable=SC2164
 SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
@@ -55,6 +56,7 @@ _help() {
     echo "Options:"
     echo "  -h, --help, help ... display this help information"
     echo "  -q, --quiet ........ supress progress messages"
+    ecoh "  -C, --no-color ..... suppres colored output"
     echo "  -O, --no-output .... supress generating images"
     echo "  -F, --no-finder .... supress opening Finder to show generated images"
     echo "  -I, --symbols ...... include symbols when checking for differences"
@@ -63,10 +65,29 @@ _help() {
     return 0
 }
 
-# shellcheck disable=SC2145
-err()   { echo -e "\e[0;31m${@}\e[0m" 1>&2; }
-# shellcheck disable=SC2145
-msg()   { [[ "$QUIET" == 'no' ]] && echo -en "\e[0;37m${@}\e[0m"; }
+err()   {
+    # - Echo string as an error
+    # @param message string
+    if [[ "$RAW" == "no" ]]; then
+        # shellcheck disable=SC2145
+        echo -e "\e[0;31m${@}\e[0m" 1>&2
+    else 
+        echo -e "${@}" 1>&2
+    fi
+}
+
+msg()   { 
+    # - Echo string as a message
+    # @param message string
+    [[ "$QUIET" == 'no' ]] && {
+        if [[ "$RAW" == "no" ]]; then
+            # shellcheck disable=SC2145
+            echo -en "\e[0;37m${@}\e[0m"
+        else 
+            echo -en "${@}"
+        fi
+    }
+}
 
 fileExists() {
     # - Check if file exists and has sketch extension
@@ -208,17 +229,21 @@ diffSketchArtboards () {
             [ "$OUTPUT" == 'yes' ] && blink-diff --compose-ltr --output "$odir/changed/$_file" \
                 "$WORKING_DIR/$dirnameA/$_file" \
                 "$WORKING_DIR/$dirnameB/$_file" >/dev/null
-            msg "\e[0;33m<> $_file has changed\n"
+            output="<> $_file has changed\n"
+            [[ "$RAW" == "no" ]] && output="\e[0;33m${output}"
             (( NUM_DIFFS++ ))
         elif [[ -n "$_added" ]]; then
             [ "$OUTPUT" == 'yes' ] && cp "$WORKING_DIR/$dirnameB/$_added" "$odir/added/$_added"
-            msg "\e[0;32m++ $_added added\n"
+            output="++ $_added was added\n"
+            [[ "$RAW" == "no" ]] && output="\e[0;32m${output}"
             (( NUM_DIFFS++ ))
         elif [[ -n "$_removed" ]]; then
             [ "$OUTPUT" == 'yes' ] && cp "$WORKING_DIR/$dirnameA/$_removed" "$odir/deleted/$_removed"
-            msg "\e[0;31m-- $_removed removed\n"
+            output="-- $_removed was removed\n"
+            [[ "$RAW" == "no" ]] && output="\e[0;31m${output}"
             (( NUM_DIFFS++ ))
         fi
+        msg "$output"
     done < <(diff -rq "$WORKING_DIR/$dirnameA" "$WORKING_DIR/$dirnameB" | grep .png)
 
     return 0
@@ -282,6 +307,7 @@ while [[ $# -gt 0 ]]; do
     case $arg in
         -o|--output)    RESULTS_DIR=$2; shift;;
         -O|--no-output) OUTPUT='no';;
+        -C|--no-color)  RAW='yes';;
         -F|--no-finder) OPEN_RESULTS='no';;
         -I|--symbols)   SYMBOLS='YES';;
         -q|--quiet)     QUIET='yes';;

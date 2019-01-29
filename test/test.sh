@@ -3,9 +3,9 @@
 # Test skdiff
 # @author Alister Lewis-Bowen <alister@lewis-bowen.org>
 
-SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
-skdiff="$SCRIPTPATH/../skdiff"
-cd "$SCRIPTPATH"
+SCRIPTPATH="$( cd "$(dirname "$0")" || exit 1 ; pwd -P )"
+export skdiff="$SCRIPTPATH/../skdiff"
+cd "$SCRIPTPATH" || exit 1
 
 OUTPUT_DIR='test_changes'
 
@@ -75,4 +75,9 @@ rm test.sketch
 heading "diff including symbols"
 cleanup
 skdiff example_1.sketch example_2.sketch \
-    --symbols
+    --symbols --no-finder
+
+heading "diff including symbols with raw output"
+cleanup
+skdiff example_1.sketch example_2.sketch \
+    --symbols --no-color --no-finder
