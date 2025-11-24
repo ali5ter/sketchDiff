@@ -1,3 +1,5 @@
+> **⚠️ Archived 2025-11-24. No longer maintained.**
+
 # skdiff
 Command to generate visual differences between two sketch files. Useful as a `git diff` for your Sketch files.
 
